@@ -1,3 +1,148 @@
-<video controls controlsList="nodownload" width="100%">
-  <source src="https://muehehehe.b-cdn.net/2776-IPZZ-655.mp4" type="video/mp4">
-</video>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Streaming</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        video {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: 90vh;
+            background: #000;
+        }
+
+        .info {
+            padding: 12px 15px;
+        }
+
+        .loading {
+            padding: 30px;
+            text-align: center;
+        }
+
+        .error {
+            padding: 30px;
+            text-align: center;
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div id="loading" class="loading">
+        Memuat video...
+    </div>
+
+    <video
+        id="player"
+        controls
+        controlsList="nodownload"
+        playsinline
+        preload="metadata"
+        style="display:none;">
+    </video>
+
+    <div id="info" class="info" style="display:none;">
+        Video ID: <span id="videoId"></span>
+    </div>
+
+    <div id="error" class="error" style="display:none;"></div>
+
+</div>
+
+<script>
+
+async function loadVideo() {
+
+    // Ambil ?id=
+    const params = new URLSearchParams(window.location.search);
+    const id = parseInt(params.get("id"), 10);
+
+    const loading = document.getElementById("loading");
+    const player = document.getElementById("player");
+    const info = document.getElementById("info");
+    const videoId = document.getElementById("videoId");
+    const error = document.getElementById("error");
+
+    // Cek ID
+    if (!id || id < 1) {
+        loading.style.display = "none";
+        error.style.display = "block";
+        error.textContent = "ID video tidak valid.";
+        return;
+    }
+
+    try {
+
+        // Ambil daftar URL dari videos.txt
+        const response = await fetch("videos.txt", {
+            cache: "no-cache"
+        });
+
+        if (!response.ok) {
+            throw new Error("videos.txt tidak ditemukan.");
+        }
+
+        const text = await response.text();
+
+        // Pisahkan berdasarkan baris
+        const videos = text
+            .split(/\r?\n/)
+            .map(line => line.trim())
+            .filter(line => line !== "");
+
+        // ID 1 = baris pertama
+        const videoUrl = videos[id - 1];
+
+        if (!videoUrl) {
+            throw new Error("Video dengan ID " + id + " tidak ditemukan.");
+        }
+
+        // Masukkan URL ke player
+        player.src = videoUrl;
+
+        player.style.display = "block";
+        info.style.display = "block";
+
+        videoId.textContent = id;
+        loading.style.display = "none";
+
+    } catch (err) {
+
+        loading.style.display = "none";
+        error.style.display = "block";
+        error.textContent = err.message;
+
+    }
+}
+
+loadVideo();
+
+</script>
+
+</body>
+</html>
